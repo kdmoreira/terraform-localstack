@@ -16,7 +16,7 @@ The project was created and executed in Ubuntu 22.04 and made use of the followi
 
 ## Course Notes
 > [!NOTE]  
-> Whenever `awslocal` or `tflocal` appear, they could be replaced by `aws` and `terraform` respectively, if you're using the actual AWS and Terraform.
+> Whenever `awslocal` or `tflocal` appear, they could be replaced by `aws` and `terraform` respectively, if you're using the actual AWS.
 
 ### Provisioning
 The LocalStack container must be up and running so Terraform can work with the mocked AWS provider:
@@ -24,7 +24,7 @@ The LocalStack container must be up and running so Terraform can work with the m
 localstack start
 ```
 Using the `tflocal` command handles LocalStack service endpoint configurations and accepts mocked AWS credentials.
-Execute these in sequence to provision the infrastructure:  
+Execute these in sequence (typing `yes` whenever prompted) to provision the infrastructure:  
 ```console
 tflocal init
 tflocal plan
@@ -32,6 +32,12 @@ tflocal apply
 ```
 
 Though it supposedly creates an EC2 instance, it's just an emulated instance. LocalStack Pro would be necessary to mock real instances with containers.
+
+### Auto-approving
+Skips interactive approval:
+```console
+tflocal apply -auto-approve
+```
 
 ### Changing infrastructure
 The `main.tf` file declares what the infrastructure should have. After changes in this file, the next time `tflocal apply` is executed, it will be aware of the changes and modify the infrastructure to reflect the new configuration.
@@ -47,10 +53,22 @@ localstack stop
 ```console
 tflocal destroy
 ```
+
+### Target resources
+> [!WARNING]  
+> This is not recommended, since the result of the plan does not represent the whole configuration.
+
+Some actions may target specific resources instead of the whole infrastructure configuration.
+Examples:
 - Destroying specific resources:
 ```console
-tflocal destroy -target=<resource_name>'
+tflocal destroy -target <resource_name>
 ```
+- Provisioning specific resources:
+```console
+tflocal apply -target <resource_name>
+```
+
 ### Resources information
 Listing created resources:
 ```console
@@ -58,7 +76,7 @@ tflocal state list
 ```
 Listing state of a specific resource (e.g. aws_eip.one):
 ```console
-tflocal state show aws_eip.one
+tflocal state show <resource_name>
 ```
 
 ### Variables
