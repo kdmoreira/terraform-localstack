@@ -81,3 +81,8 @@ tflocal state show <resource_name>
 
 ### Variables
 See `main.tf` for examples and usage (in comments).
+
+### Formatting
+```console
+tflocal fmt
+```
