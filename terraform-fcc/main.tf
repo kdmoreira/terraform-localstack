@@ -17,8 +17,18 @@ variable "aws_credentials" {
   secret_key = "mock_secret_key" }
 }
 
-resource "aws_s3_bucket" "my-bucket" {
+module "s3_bucket" {
+  source = "terraform-aws-modules/s3-bucket/aws"
+
   bucket = "my-bucket"
+  acl    = "private"
+
+  control_object_ownership = true
+  object_ownership         = "ObjectWriter"
+
+  versioning = {
+    enabled = true
+  }
 
   tags = {
     Name        = "my-bucket"
