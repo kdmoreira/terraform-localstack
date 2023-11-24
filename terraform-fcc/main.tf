@@ -17,6 +17,38 @@ variable "aws_credentials" {
   secret_key = "mock_secret_key" }
 }
 
+resource "aws_s3_bucket_public_access_block" "public_access_block" {
+  bucket = module.s3_bucket.s3_bucket_id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+data "aws_iam_policy_document" "allow_access_from_another_account" {
+  statement {
+    principals {
+      type        = "AWS"
+      identifiers = ["123456789012"]
+    }
+
+    actions = [
+      "s3:GetObject"
+    ]
+
+    resources = [
+      "arn:aws:s3:::my-bucket",
+      "arn:aws:s3:::my-bucket/*",
+    ]
+  }
+}
+
+resource "aws_s3_bucket_policy" "allow_access_from_another_account" {
+  bucket = module.s3_bucket.s3_bucket_id
+  policy = data.aws_iam_policy_document.allow_access_from_another_account.json
+}
+
 module "s3_bucket" {
   source = "terraform-aws-modules/s3-bucket/aws"
 
@@ -33,6 +65,35 @@ module "s3_bucket" {
   tags = {
     Name        = "my-bucket"
     Environment = "dev"
+  }
+
+  website = {
+    # conflicts with "error_document"
+    #        redirect_all_requests_to = {
+    #          host_name = "https://modules.tf"
+    #        }
+
+    index_document = "index.html"
+    error_document = "error.html"
+    routing_rules = [{
+      condition = {
+        key_prefix_equals = "docs/"
+      },
+      redirect = {
+        replace_key_prefix_with = "documents/"
+      }
+      }, {
+      condition = {
+        http_error_code_returned_equals = 404
+        key_prefix_equals               = "archive/"
+      },
+      redirect = {
+        host_name          = "archive.myhost.com"
+        http_redirect_code = 301
+        protocol           = "https"
+        replace_key_with   = "not_found.html"
+      }
+    }]
   }
 }
 
